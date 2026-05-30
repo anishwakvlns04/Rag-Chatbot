@@ -49,11 +49,26 @@ def retrieve_chunks(query, n_results=8):
         query
     )
 
+    where_filter = None
+
+    query_lower = query.lower()
+
+    if "video a" in query_lower:
+        where_filter = {
+            "video_id": "A"
+        }
+
+    elif "video b" in query_lower:
+        where_filter = {
+            "video_id": "B"
+        }
+
     results = collection.query(
         query_embeddings=[
             query_embedding.tolist()
         ],
-        n_results=n_results
+        n_results=n_results,
+        where=where_filter
     )
 
     documents = results["documents"][0]
@@ -65,9 +80,11 @@ def retrieve_chunks(query, n_results=8):
         documents,
         metadatas
     ):
-        chunks.append({
-            "text": doc,
-            "video_id": meta["video_id"]
-        })
+        chunks.append(
+            {
+                "text": doc,
+                "video_id": meta["video_id"]
+            }
+        )
 
     return chunks
