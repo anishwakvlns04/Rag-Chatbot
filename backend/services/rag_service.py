@@ -1,14 +1,41 @@
 import os
 
 from dotenv import load_dotenv
-from openai import OpenAI
+
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
 
 load_dotenv()
 
-client = OpenAI(
+llm = ChatOpenAI(
+    model="meta-llama/llama-3.3-70b-instruct",
     api_key=os.getenv("OPENROUTER_API_KEY"),
     base_url="https://openrouter.ai/api/v1"
 )
+
+prompt_template = ChatPromptTemplate.from_template(
+    """
+You are an AI assistant.
+
+The context contains information from multiple videos.
+
+Do NOT mention Video A or Video B unless the user
+explicitly asks for comparison.
+
+Write natural answers.
+
+Answer ONLY using the provided context.
+
+Context:
+{context}
+
+Question:
+{question}
+
+Answer:
+"""
+)
+
 
 def generate_answer(question, chunks):
 
@@ -21,42 +48,16 @@ def generate_answer(question, chunks):
             ]
         )
 
-        prompt = f"""
-You are an AI assistant.
+        chain = prompt_template | llm
 
-The context contains information from
-multiple videos.
-
-Do NOT mention video labels such as
-Video A or Video B in the answer unless
-the user specifically asks for comparison.
-
-Write a natural answer.
-
-Use the sources only internally.
-
-Answer ONLY using the provided context understand the videos properly.
-
-Context:
-{context}
-
-Question:
-{question}
-
-Answer:
-"""
-
-        response = client.chat.completions.create(
-            model="meta-llama/llama-3.3-70b-instruct",
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
+        response = chain.invoke(
+            {
+                "context": context,
+                "question": question
+            }
         )
 
-        return response.choices[0].message.content
+        return response.content
 
     except Exception as e:
         return f"LLM Error: {str(e)}"
