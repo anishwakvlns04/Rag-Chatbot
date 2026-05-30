@@ -56,4 +56,18 @@ def retrieve_chunks(query, n_results=8):
         n_results=n_results
     )
 
-    return results["documents"][0]
+    documents = results["documents"][0]
+    metadatas = results["metadatas"][0]
+
+    chunks = []
+
+    for doc, meta in zip(
+        documents,
+        metadatas
+    ):
+        chunks.append({
+            "text": doc,
+            "video_id": meta["video_id"]
+        })
+
+    return chunks

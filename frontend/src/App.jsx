@@ -41,6 +41,26 @@ setVideoA({
   ).toFixed(2),
   thumbnail: meta.thumbnail,
 });
+if (response.data.videoB) {
+
+  const metaB =
+    response.data.videoB.metadata;
+
+  setVideoB({
+    title: metaB.title,
+    creator: metaB.creator,
+    views: metaB.views,
+    likes: metaB.likes,
+    comments: metaB.comments,
+    engagementRate: (
+      ((metaB.likes + metaB.comments) /
+        metaB.views) *
+      100
+    ).toFixed(2),
+    thumbnail: metaB.thumbnail,
+  });
+}
+
     } catch (error) {
       console.error(error);
       alert("Analysis Failed");

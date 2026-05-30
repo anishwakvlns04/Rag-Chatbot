@@ -10,17 +10,32 @@ client = OpenAI(
     base_url="https://openrouter.ai/api/v1"
 )
 
-
 def generate_answer(question, chunks):
 
     try:
 
-        context = "\n\n".join(chunks)
+        context = "\n\n".join(
+            [
+                f"[Video {chunk['video_id']}]\n{chunk['text']}"
+                for chunk in chunks
+            ]
+        )
 
         prompt = f"""
 You are an AI assistant.
 
-Answer ONLY using the provided context.
+The context contains information from
+multiple videos.
+
+Do NOT mention video labels such as
+Video A or Video B in the answer unless
+the user specifically asks for comparison.
+
+Write a natural answer.
+
+Use the sources only internally.
+
+Answer ONLY using the provided context understand the videos properly.
 
 Context:
 {context}

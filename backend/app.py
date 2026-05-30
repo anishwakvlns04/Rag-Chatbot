@@ -39,40 +39,66 @@ def home():
 @app.post("/analyze")
 def analyze(request: AnalyzeRequest):
 
-    video_b_present = bool(
-        request.instagram_url.strip()
-    )
-
-    metadata = get_youtube_metadata(
+    # Video A
+    metadata_a = get_youtube_metadata(
         request.youtube_url
     )
 
-    transcript = get_youtube_transcript(
+    transcript_a = get_youtube_transcript(
         request.youtube_url
     )
 
-    print("\n========== TRANSCRIPT ==========")
-    print(transcript[:500])
-    print("================================\n")
-
-    chunks = chunk_transcript(
-        transcript
+    chunks_a = chunk_transcript(
+        transcript_a
     )
 
-    stored_count = store_chunks(
-        chunks,
+    store_chunks(
+        chunks_a,
         "A"
     )
 
-    return {
+    response = {
         "videoA": {
-            "metadata": metadata,
-            "transcript_length": len(transcript),
-            "total_chunks": len(chunks),
-            "stored_vectors": stored_count
-        },
-        "videoB_available": video_b_present
+            "metadata": metadata_a,
+            "transcript_length": len(transcript_a),
+            "total_chunks": len(chunks_a)
+        }
     }
+
+    # Video B (temporarily treat as second YouTube URL)
+    if request.instagram_url.strip():
+
+        metadata_b = get_youtube_metadata(
+            request.instagram_url
+        )
+
+        transcript_b = get_youtube_transcript(
+            request.instagram_url
+        )
+
+        if transcript_b.startswith(
+            "Transcript Error"
+        ):
+            print("Video B transcript failed")
+        else:
+
+            chunks_b = chunk_transcript(
+                transcript_b
+            )
+
+
+            store_chunks(
+                chunks_b,
+                "B"
+            )
+
+        response["videoB"] = {
+            "metadata": metadata_b,
+            "transcript_length": len(transcript_b),
+            "total_chunks": len(chunks_b)
+        }
+
+    return response
 
 @app.post("/chat")
 def chat(request: ChatRequest):

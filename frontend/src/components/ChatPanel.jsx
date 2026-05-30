@@ -33,6 +33,7 @@ function ChatPanel() {
      const aiMessage = {
   role: "assistant",
   text: response.data.answer,
+  sources: response.data.sources,
 };
 
       setMessages((prev) => [
@@ -66,6 +67,7 @@ function ChatPanel() {
             key={index}
             role={msg.role}
             text={msg.text}
+            sources={msg.sources}
           />
         ))}
       </div>
