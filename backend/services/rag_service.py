@@ -15,16 +15,30 @@ llm = ChatOpenAI(
 
 prompt_template = ChatPromptTemplate.from_template(
     """
-You are an AI assistant.
+You are an AI assistant helping users analyze videos.
 
-The context contains information from multiple videos.
+The context contains information from one or more videos.
+
+Use the context to answer naturally.
+
+If the user asks for:
+- comparison
+- similarities
+- differences
+- recommendations
+- relationships between videos
+
+analyze the retrieved information and provide a reasoned answer.
 
 Do NOT mention Video A or Video B unless the user
-explicitly asks for comparison.
+explicitly asks about them.
 
-Write natural answers.
+Use conversation history when relevant.
 
-Answer ONLY using the provided context.
+Do not invent facts that are not present in the context.
+
+Conversation History:
+{history}
 
 Context:
 {context}
@@ -37,9 +51,20 @@ Answer:
 )
 
 
-def generate_answer(question, chunks):
+def generate_answer(
+    question,
+    chunks,
+    chat_history
+):
 
     try:
+
+        history_text = "\n".join(
+            [
+                f"User: {item['question']}\nAssistant: {item['answer']}"
+                for item in chat_history
+            ]
+        )
 
         context = "\n\n".join(
             [
@@ -52,6 +77,7 @@ def generate_answer(question, chunks):
 
         response = chain.invoke(
             {
+                "history": history_text,
                 "context": context,
                 "question": question
             }

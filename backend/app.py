@@ -19,6 +19,8 @@ from services.vector_store_service import (
     retrieve_chunks
 )
 
+chat_history = []
+
 app = FastAPI()
 
 app.add_middleware(
@@ -103,14 +105,27 @@ def analyze(request: AnalyzeRequest):
 @app.post("/chat")
 def chat(request: ChatRequest):
 
+    global chat_history
+
     chunks = retrieve_chunks(
         request.question
     )
 
     answer = generate_answer(
         request.question,
-        chunks
+        chunks,
+        chat_history
     )
+
+    chat_history.append(
+        {
+            "question": request.question,
+            "answer": answer
+        }
+    )
+
+    if len(chat_history) > 10:
+        chat_history = chat_history[-10:]
 
     return {
         "question": request.question,
