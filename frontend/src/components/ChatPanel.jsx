@@ -1,12 +1,58 @@
+import { useState } from "react";
+import axios from "axios";
 import Message from "./Message";
 
 function ChatPanel() {
-  const messages = [
+  const [question, setQuestion] = useState("");
+
+  const [messages, setMessages] = useState([
     {
       role: "assistant",
-      text: "Ask me anything about the videos.",
+      text: "Ask me anything about the video.",
     },
-  ];
+  ]);
+
+  const handleSend = async () => {
+    if (!question.trim()) return;
+
+    const userMessage = {
+      role: "user",
+      text: question,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+
+    try {
+      const response = await axios.post(
+        "http://localhost:8000/chat",
+        {
+          question,
+        }
+      );
+
+     const aiMessage = {
+  role: "assistant",
+  text: response.data.answer,
+};
+
+      setMessages((prev) => [
+        ...prev,
+        aiMessage,
+      ]);
+    } catch (error) {
+      console.error(error);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          text: "Error contacting backend",
+        },
+      ]);
+    }
+
+    setQuestion("");
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-md p-4">
@@ -14,19 +60,34 @@ function ChatPanel() {
         Chat
       </h2>
 
-      {messages.map((msg, index) => (
-        <Message
-          key={index}
-          role={msg.role}
-          text={msg.text}
-        />
-      ))}
+      <div className="h-96 overflow-y-auto">
+        {messages.map((msg, index) => (
+          <Message
+            key={index}
+            role={msg.role}
+            text={msg.text}
+          />
+        ))}
+      </div>
 
-      <input
-        type="text"
-        placeholder="Ask a question..."
-        className="w-full mt-4 border rounded-lg p-3"
-      />
+      <div className="flex gap-2 mt-4">
+        <input
+          type="text"
+          value={question}
+          onChange={(e) =>
+            setQuestion(e.target.value)
+          }
+          placeholder="Ask a question..."
+          className="flex-1 border rounded-lg p-3"
+        />
+
+        <button
+          onClick={handleSend}
+          className="bg-black text-white px-5 rounded-lg"
+        >
+          Send
+        </button>
+      </div>
     </div>
   );
 }

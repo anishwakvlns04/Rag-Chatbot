@@ -1,4 +1,6 @@
 import { useState } from "react";
+import axios from "axios";
+
 import VideoCard from "./components/VideoCard";
 import ChatPanel from "./components/ChatPanel";
 
@@ -6,26 +8,45 @@ function App() {
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
 
-  const videoA = {
-    title: "YouTube Video",
-    creator: "Creator A",
-    views: 10000,
-    likes: 800,
-    comments: 50,
-    engagementRate: 8.5,
-    thumbnail:
-      "https://via.placeholder.com/400x200",
-  };
+  const [videoA, setVideoA] = useState(null);
+  const [videoB, setVideoB] = useState(null);
 
-  const videoB = {
-    title: "Instagram Reel",
-    creator: "Creator B",
-    views: 15000,
-    likes: 900,
-    comments: 60,
-    engagementRate: 6.4,
-    thumbnail:
-      "https://via.placeholder.com/400x200",
+  const [loading, setLoading] = useState(false);
+
+  const analyzeVideos = async () => {
+    try {
+      setLoading(true);
+
+      const response = await axios.post(
+        "http://localhost:8000/analyze",
+        {
+          youtube_url: youtubeUrl,
+          instagram_url: instagramUrl,
+        }
+      );
+
+      console.log(response.data);
+const meta =
+  response.data.videoA.metadata;
+
+setVideoA({
+  title: meta.title,
+  creator: meta.creator,
+  views: meta.views,
+  likes: meta.likes,
+  comments: meta.comments,
+  engagementRate: (
+    ((meta.likes + meta.comments) / meta.views) *
+    100
+  ).toFixed(2),
+  thumbnail: meta.thumbnail,
+});
+    } catch (error) {
+      console.error(error);
+      alert("Analysis Failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -57,16 +78,28 @@ function App() {
               className="w-full border p-3 rounded-lg"
             />
 
-            <button className="w-full bg-black text-white p-3 rounded-lg">
-              Analyze Videos
+            <button
+              onClick={analyzeVideos}
+              className="w-full bg-black text-white p-3 rounded-lg"
+            >
+              {loading
+                ? "Analyzing..."
+                : "Analyze Videos"}
             </button>
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <VideoCard video={videoA} />
-          <VideoCard video={videoB} />
-        </div>
+       <div className="grid md:grid-cols-2 gap-6 mb-6">
+
+  {videoA && (
+    <VideoCard video={videoA} />
+  )}
+
+  {videoB && (
+    <VideoCard video={videoB} />
+  )}
+
+</div>
 
         <ChatPanel />
       </div>
