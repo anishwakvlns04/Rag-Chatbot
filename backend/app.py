@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from models import AnalyzeRequest, ChatRequest
 from fastapi.middleware.cors import CORSMiddleware
 from services.rag_service import (
-    generate_answer
+    generate_answer,
+    stream_answer
 )
 
 from services.youtube_service import (
@@ -18,8 +19,8 @@ from services.vector_store_service import (
     store_chunks,
     retrieve_chunks
 )
+from fastapi.responses import StreamingResponse
 
-chat_history = []
 
 app = FastAPI()
 
@@ -37,18 +38,41 @@ def home():
         "message": "Video Analyzer Backend Running"
     }
 
+global chat_history
+
+chat_history = []
+video_metadata = {}
 
 @app.post("/analyze")
 def analyze(request: AnalyzeRequest):
+    global chat_history
+    global video_metadata
+
+    chat_history = []
+    video_metadata = {}
 
     # Video A
     metadata_a = get_youtube_metadata(
         request.youtube_url
     )
+    video_metadata["A"] = metadata_a
 
     transcript_a = get_youtube_transcript(
         request.youtube_url
     )
+
+    if metadata_a.get("views") and metadata_a["views"] > 0:
+        metadata_a["engagement_rate"] = round(
+        (
+            (metadata_a.get("likes") or 0)
+            + (metadata_a.get("comments") or 0)
+        )
+        / metadata_a["views"]
+        * 100,
+        2
+    )
+    else:
+        metadata_a["engagement_rate"] = 0
 
     chunks_a = chunk_transcript(
         transcript_a
@@ -73,21 +97,37 @@ def analyze(request: AnalyzeRequest):
         metadata_b = get_youtube_metadata(
             request.instagram_url
         )
+        video_metadata["B"] = metadata_b
 
         transcript_b = get_youtube_transcript(
             request.instagram_url
         )
+
+        if metadata_b.get("views") and metadata_b["views"] > 0:
+            metadata_b["engagement_rate"] = round(
+        (
+            (metadata_b.get("likes") or 0)
+            + (metadata_b.get("comments") or 0)
+        )
+        / metadata_b["views"]
+        * 100,
+        2
+    )
+        else:
+            metadata_b["engagement_rate"] = 0
+
+        
+
+        chunks_b = []
 
         if transcript_b.startswith(
             "Transcript Error"
         ):
             print("Video B transcript failed")
         else:
-
             chunks_b = chunk_transcript(
                 transcript_b
             )
-
 
             store_chunks(
                 chunks_b,
@@ -114,9 +154,9 @@ def chat(request: ChatRequest):
     answer = generate_answer(
         request.question,
         chunks,
-        chat_history
+        chat_history,
+        video_metadata
     )
-
     chat_history.append(
         {
             "question": request.question,
@@ -131,4 +171,35 @@ def chat(request: ChatRequest):
         "question": request.question,
         "answer": answer,
         "sources": chunks
+    }
+
+@app.post("/chat/stream")
+def chat_stream(request: ChatRequest):
+
+    global chat_history
+    global video_metadata
+
+    chunks = retrieve_chunks(
+        request.question
+    )
+
+    return StreamingResponse(
+        stream_answer(
+            request.question,
+            chunks,
+            chat_history,
+            video_metadata
+        ),
+        media_type="text/plain"
+    )
+
+@app.post("/clear-chat")
+def clear_chat():
+
+    global chat_history
+
+    chat_history = []
+
+    return {
+        "message": "Chat history cleared"
     }

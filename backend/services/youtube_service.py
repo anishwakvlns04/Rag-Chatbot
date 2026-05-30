@@ -21,7 +21,17 @@ def get_youtube_metadata(url):
                 "comments": info.get("comment_count"),
                 "duration": info.get("duration"),
                 "upload_date": info.get("upload_date"),
-                "thumbnail": info.get("thumbnail")
+                "thumbnail": info.get("thumbnail"),
+
+                # Assignment fields
+                "followers": info.get(
+                    "channel_follower_count"
+                ),
+
+                "hashtags": info.get(
+                    "tags",
+                    []
+                )
             }
 
     except Exception as e:
@@ -33,7 +43,9 @@ def get_youtube_metadata(url):
 def extract_video_id(url):
     patterns = [
         r"v=([a-zA-Z0-9_-]{11})",
-        r"youtu\.be/([a-zA-Z0-9_-]{11})"
+        r"youtu\.be/([a-zA-Z0-9_-]{11})",
+        r"shorts/([a-zA-Z0-9_-]{11})",
+        r"embed/([a-zA-Z0-9_-]{11})"
     ]
 
     for pattern in patterns:

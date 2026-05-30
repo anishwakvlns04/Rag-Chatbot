@@ -1,10 +1,9 @@
 import { useState } from "react";
-import axios from "axios";
 import Message from "./Message";
 
 function ChatPanel() {
   const [question, setQuestion] = useState("");
-
+  const [sending, setSending] = useState(false);
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -12,54 +11,135 @@ function ChatPanel() {
     },
   ]);
 
-  const handleSend = async () => {
-    if (!question.trim()) return;
-
-    const userMessage = {
-      role: "user",
-      text: question,
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-
+   const clearChat = async () => {
     try {
-      const response = await axios.post(
-        "http://localhost:8000/chat",
+      await fetch(
+        "http://localhost:8000/clear-chat",
         {
-          question,
+          method: "POST",
         }
       );
 
-     const aiMessage = {
-  role: "assistant",
-  text: response.data.answer,
-  sources: response.data.sources,
-};
-
-      setMessages((prev) => [
-        ...prev,
-        aiMessage,
+      setMessages([
+        {
+          role: "assistant",
+          text: "Ask me anything about the video.",
+        },
       ]);
     } catch (error) {
       console.error(error);
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          text: "Error contacting backend",
-        },
-      ]);
     }
+  };
+  const handleSend = async () => {
+    if (!question.trim()) return;
+    if (sending) return;
+
+    setSending(true);
+
+    const userQuestion = question;
+
+    const userMessage = {
+      role: "user",
+      text: userQuestion,
+    };
+
+    setMessages((prev) => [
+      ...prev,
+      userMessage,
+      {
+        role: "assistant",
+        text: "",
+        sources: [],
+      },
+    ]);
 
     setQuestion("");
+
+    try {
+      const response = await fetch(
+        "http://localhost:8000/chat/stream",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            question: userQuestion,
+          }),
+        }
+      );
+
+      const reader =
+        response.body.getReader();
+
+      const decoder =
+        new TextDecoder();
+
+      let streamedText = "";
+
+      while (true) {
+        const {
+          done,
+          value,
+        } = await reader.read();
+
+        if (done) break;
+
+        streamedText += decoder.decode(
+          value
+        );
+
+        setMessages((prev) => {
+          const updated = [...prev];
+
+          updated[
+            updated.length - 1
+          ] = {
+            role: "assistant",
+            text: streamedText,
+            sources: [],
+          };
+
+          return updated;
+        });
+      }
+    } catch (error) {
+      console.error(error);
+
+      setMessages((prev) => {
+        const updated = [...prev];
+
+        updated[
+          updated.length - 1
+        ] = {
+          role: "assistant",
+          text: "Error contacting backend",
+          sources: [],
+        };
+
+        return updated;
+      });
+    }
+    finally {
+  setSending(false);
+}
   };
 
   return (
     <div className="bg-white rounded-xl shadow-md p-4">
-      <h2 className="text-xl font-semibold mb-4">
-        Chat
-      </h2>
+     <div className="flex justify-between items-center mb-4">
+  <h2 className="text-xl font-semibold">
+    Chat
+  </h2>
+
+  <button
+    onClick={clearChat}
+    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm"
+  >
+    New Chat
+  </button>
+</div>
 
       <div className="h-96 overflow-y-auto">
         {messages.map((msg, index) => (
@@ -79,12 +159,18 @@ function ChatPanel() {
           onChange={(e) =>
             setQuestion(e.target.value)
           }
+          onKeyDown={(e) => {
+    if (e.key === "Enter") {
+      handleSend();
+    }
+  }}
           placeholder="Ask a question..."
           className="flex-1 border rounded-lg p-3"
         />
 
         <button
           onClick={handleSend}
+          disabled={sending}
           className="bg-black text-white px-5 rounded-lg"
         >
           Send

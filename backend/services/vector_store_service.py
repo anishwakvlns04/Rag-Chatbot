@@ -1,5 +1,6 @@
 import chromadb
 from sentence_transformers import SentenceTransformer
+import uuid
 
 # Load embedding model
 model = SentenceTransformer(
@@ -22,15 +23,16 @@ def store_chunks(chunks, video_id):
     )
 
     ids = [
-        f"{video_id}_chunk_{i}"
-        for i in range(len(chunks))
+        f"{video_id}_{uuid.uuid4()}"
+        for _ in chunks
     ]
 
     metadatas = [
         {
-            "video_id": video_id
+            "video_id": video_id,
+            "chunk_index": i
         }
-        for _ in chunks
+        for i in range(len(chunks))
     ]
 
     collection.add(
@@ -82,8 +84,9 @@ def retrieve_chunks(query, n_results=8):
     ):
         chunks.append(
             {
-                "text": doc,
-                "video_id": meta["video_id"]
+            "text": doc,
+            "video_id": meta["video_id"],
+            "chunk_index": meta["chunk_index"]
             }
         )
 

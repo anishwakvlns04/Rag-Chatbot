@@ -52,11 +52,14 @@ if (response.data.videoB) {
     views: metaB.views,
     likes: metaB.likes,
     comments: metaB.comments,
-    engagementRate: (
-      ((metaB.likes + metaB.comments) /
-        metaB.views) *
-      100
-    ).toFixed(2),
+    engagementRate:
+  meta.views > 0
+    ? (
+        ((meta.likes + meta.comments) /
+          meta.views) *
+        100
+      ).toFixed(2)
+    : "0.00",
     thumbnail: metaB.thumbnail,
   });
 }
@@ -80,7 +83,7 @@ if (response.data.videoB) {
           <div className="space-y-4">
             <input
               type="text"
-              placeholder="YouTube URL"
+              placeholder="Video A URL (YouTube or Instagram)"
               value={youtubeUrl}
               onChange={(e) =>
                 setYoutubeUrl(e.target.value)
@@ -90,7 +93,7 @@ if (response.data.videoB) {
 
             <input
               type="text"
-              placeholder="Instagram Reel URL"
+              placeholder="Video B URL (YouTube or Instagram)"
               value={instagramUrl}
               onChange={(e) =>
                 setInstagramUrl(e.target.value)

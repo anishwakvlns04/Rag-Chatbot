@@ -15,23 +15,28 @@ llm = ChatOpenAI(
 
 prompt_template = ChatPromptTemplate.from_template(
     """
-You are an AI assistant helping users analyze videos.
+You are an AI assistant helping content creators analyze videos.
 
-The context contains information from one or more videos.
+The provided context may contain:
+- Transcript chunks
+- Video metadata
+- Creator information
+- Engagement metrics
 
-Use the context to answer naturally.
+Use ONLY the provided context.
 
-If the user asks for:
-- comparison
-- similarities
-- differences
-- recommendations
-- relationships between videos
+You can:
+- Summarize videos
+- Explain topics discussed in videos
+- Compare Video A and Video B
+- Compare engagement
+- Suggest improvements
+- Identify creators
+- Analyze hooks and openings
 
-analyze the retrieved information and provide a reasoned answer.
+When comparing videos, analyze both transcript content and engagement information if available.
 
-Do NOT mention Video A or Video B unless the user
-explicitly asks about them.
+For hook analysis, focus on the opening transcript sections.
 
 Use conversation history when relevant.
 
@@ -54,7 +59,8 @@ Answer:
 def generate_answer(
     question,
     chunks,
-    chat_history
+    chat_history,
+    video_metadata
 ):
 
     try:
@@ -65,12 +71,35 @@ def generate_answer(
                 for item in chat_history
             ]
         )
+        metadata_text = ""
+        for video_id, metadata in video_metadata.items():
 
-        context = "\n\n".join(
+            metadata_text += f"""
+        Video {video_id} Metadata:
+        Title: {metadata.get('title')}
+        Creator: {metadata.get('creator')}
+        Views: {metadata.get('views')}
+        Likes: {metadata.get('likes')}
+        Comments: {metadata.get('comments')}
+        Engagement Rate: {metadata.get('engagement_rate')}
+        Followers: {metadata.get('followers')}
+        Hashtags: {metadata.get('hashtags')}
+        Duration: {metadata.get('duration')}
+        Upload Date: {metadata.get('upload_date')}
+
+        """
+
+        transcript_context = "\n\n".join(
             [
-                f"[Video {chunk['video_id']}]\n{chunk['text']}"
+                f"[Video {chunk['video_id']} | Chunk {chunk.get('chunk_index', 0)}]\n{chunk['text']}"
                 for chunk in chunks
             ]
+        )
+
+        context = (
+            metadata_text
+            + "\n\nTranscript Chunks:\n\n"
+            + transcript_context
         )
 
         chain = prompt_template | llm
@@ -87,3 +116,74 @@ def generate_answer(
 
     except Exception as e:
         return f"LLM Error: {str(e)}"
+
+
+def stream_answer(
+    question,
+    chunks,
+    chat_history,
+    video_metadata
+):
+
+    history_text = "\n".join(
+        [
+            f"User: {item['question']}\nAssistant: {item['answer']}"
+            for item in chat_history
+        ]
+    )
+
+    metadata_text = ""
+
+    for video_id, metadata in video_metadata.items():
+
+        metadata_text += f"""
+    Video {video_id} Metadata:
+    Title: {metadata.get('title')}
+    Creator: {metadata.get('creator')}
+    Views: {metadata.get('views')}
+    Likes: {metadata.get('likes')}
+    Comments: {metadata.get('comments')}
+    Engagement Rate: {metadata.get('engagement_rate')}
+    Followers: {metadata.get('followers')}
+    Hashtags: {metadata.get('hashtags')}
+    Duration: {metadata.get('duration')}
+    Upload Date: {metadata.get('upload_date')}
+
+    """
+
+    transcript_context = "\n\n".join(
+        [
+            f"[Video {chunk['video_id']} | Chunk {chunk.get('chunk_index', 0)}]\n{chunk['text']}"
+            for chunk in chunks
+        ]
+    )
+
+    context = (
+        metadata_text
+        + "\n\nTranscript Chunks:\n\n"
+        + transcript_context
+    )
+
+    chain = prompt_template | llm
+
+    full_answer = ""
+
+    for chunk in chain.stream(
+        {
+            "history": history_text,
+            "context": context,
+            "question": question
+        }
+    ):
+        full_answer += chunk.content
+        yield chunk.content
+
+    chat_history.append(
+        {
+            "question": question,
+            "answer": full_answer
+        }
+    )
+
+    if len(chat_history) > 10:
+        del chat_history[:-10]
