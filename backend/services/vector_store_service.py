@@ -91,3 +91,28 @@ def retrieve_chunks(query, n_results=8):
         )
 
     return chunks
+
+def get_hook_chunks():
+
+    results = collection.get()
+
+    hook_chunks = {}
+
+    for doc, meta in zip(
+        results["documents"],
+        results["metadatas"]
+    ):
+
+        video_id = meta["video_id"]
+
+        if (
+            video_id not in hook_chunks
+            or meta["chunk_index"]
+               < hook_chunks[video_id]["chunk_index"]
+        ):
+            hook_chunks[video_id] = {
+                "text": doc,
+                "chunk_index": meta["chunk_index"]
+            }
+
+    return hook_chunks

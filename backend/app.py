@@ -17,7 +17,8 @@ from services.chunking_service import (
 
 from services.vector_store_service import (
     store_chunks,
-    retrieve_chunks
+    retrieve_chunks,
+    get_hook_chunks
 )
 from fastapi.responses import StreamingResponse
 
@@ -146,10 +147,38 @@ def analyze(request: AnalyzeRequest):
 def chat(request: ChatRequest):
 
     global chat_history
+    question_lower = request.question.lower()
 
-    chunks = retrieve_chunks(
-        request.question
-    )
+    if (
+        "hook" in question_lower
+        or "first 5 seconds" in question_lower
+    ):
+        hook_chunks = get_hook_chunks()
+
+        if "A" in hook_chunks and "B" in hook_chunks:
+
+            chunks = [
+                {
+                    "text": hook_chunks["A"]["text"],
+                    "video_id": "A",
+                    "chunk_index": 0
+                },
+                {
+                    "text": hook_chunks["B"]["text"],
+                    "video_id": "B",
+                    "chunk_index": 0
+                }
+            ]
+
+        else:
+            chunks = retrieve_chunks(
+                request.question
+            )
+
+    else:
+        chunks = retrieve_chunks(
+            request.question
+        )
 
     answer = generate_answer(
         request.question,
@@ -178,10 +207,38 @@ def chat_stream(request: ChatRequest):
 
     global chat_history
     global video_metadata
+    question_lower = request.question.lower()
 
-    chunks = retrieve_chunks(
-        request.question
-    )
+    if (
+        "hook" in question_lower
+        or "first 5 seconds" in question_lower
+    ):
+        hook_chunks = get_hook_chunks()
+
+        if "A" in hook_chunks and "B" in hook_chunks:
+
+            chunks = [
+                {
+                    "text": hook_chunks["A"]["text"],
+                    "video_id": "A",
+                    "chunk_index": 0
+                },
+                {
+                    "text": hook_chunks["B"]["text"],
+                    "video_id": "B",
+                    "chunk_index": 0
+                }
+            ]
+
+        else:
+            chunks = retrieve_chunks(
+                request.question
+            )
+
+    else:
+        chunks = retrieve_chunks(
+            request.question
+        )
 
     return StreamingResponse(
         stream_answer(

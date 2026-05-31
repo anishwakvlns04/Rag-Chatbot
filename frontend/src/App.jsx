@@ -53,10 +53,10 @@ if (response.data.videoB) {
     likes: metaB.likes,
     comments: metaB.comments,
     engagementRate:
-  meta.views > 0
+  metaB.views > 0
     ? (
-        ((meta.likes + meta.comments) /
-          meta.views) *
+        ((metaB.likes + metaB.comments) /
+          metaB.views) *
         100
       ).toFixed(2)
     : "0.00",
