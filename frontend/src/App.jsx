@@ -30,38 +30,47 @@ const meta =
   response.data.videoA.metadata;
 
 setVideoA({
-  title: meta.title,
-  creator: meta.creator,
+  title: meta.title || "Video Unavailable",
+  creator: meta.creator || "Unknown",
   views: meta.views,
   likes: meta.likes,
   comments: meta.comments,
-  engagementRate: (
-    ((meta.likes + meta.comments) / meta.views) *
-    100
-  ).toFixed(2),
-  thumbnail: meta.thumbnail,
+
+  engagementRate:
+    meta.views > 0
+      ? (
+          ((meta.likes + meta.comments) /
+            meta.views) *
+          100
+        ).toFixed(2) + "%"
+      : "N/A",
+
+  thumbnail: meta.thumbnail || null,
 });
 if (response.data.videoB) {
 
   const metaB =
     response.data.videoB.metadata;
 
-  setVideoB({
-    title: metaB.title,
-    creator: metaB.creator,
-    views: metaB.views,
-    likes: metaB.likes,
-    comments: metaB.comments,
-    engagementRate:
-  metaB.views > 0
-    ? (
-        ((metaB.likes + metaB.comments) /
-          metaB.views) *
-        100
-      ).toFixed(2)
-    : "0.00",
-    thumbnail: metaB.thumbnail,
-  });
+
+ setVideoB({
+  title: metaB.title || "Video Unavailable",
+  creator: metaB.creator || "Unknown",
+  views: metaB.views,
+  likes: metaB.likes,
+  comments: metaB.comments,
+
+  engagementRate:
+    metaB.views > 0
+      ? (
+          ((metaB.likes + metaB.comments) /
+            metaB.views) *
+          100
+        ).toFixed(2) + "%"
+      : "N/A",
+
+  thumbnail: metaB.thumbnail || null,
+});
 }
 
     } catch (error) {
@@ -76,7 +85,7 @@ if (response.data.videoB) {
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-center mb-8">
-          Video Engagement Analyzer
+          AI Video Analyzer
         </h1>
 
         <div className="bg-white rounded-xl shadow-md p-6 mb-6">
@@ -112,7 +121,7 @@ if (response.data.videoB) {
           </div>
         </div>
 
-       <div className="grid md:grid-cols-2 gap-6 mb-6">
+       <div className="grid lg:grid-cols-2 gap-8 mb-8">
 
   {videoA && (
     <VideoCard video={videoA} />

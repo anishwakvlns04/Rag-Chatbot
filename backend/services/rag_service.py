@@ -38,7 +38,13 @@ When comparing videos, analyze both transcript content and engagement informatio
 For hook comparison questions:
 
 Treat the earliest chunk from each video as the opening hook.
+When the user uses pronouns such as
+"it", "that video", "this video",
+refer to the most recently discussed video
+from the conversation history.
 
+Do not answer for both videos unless the user
+explicitly asks about both.
 Do not mention missing timestamps.
 
 Compare the opening messages, curiosity, storytelling,

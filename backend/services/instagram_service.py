@@ -20,8 +20,6 @@ def get_instagram_metadata(url):
                 url,
                 download=False
             )
-            print("\n===== INSTAGRAM INFO KEYS =====")
-            print(info.keys())
 
             description = (
                 info.get("description")
@@ -34,17 +32,31 @@ def get_instagram_metadata(url):
                 if word.startswith("#")
             ]
 
-            print("HASHTAGS:", hashtags)
+
+            thumbnail_url = info.get(
+                "thumbnail"
+            )
+
+            if (
+                not thumbnail_url
+                and info.get("thumbnails")
+            ):
+                thumbnail_url = (
+                    info["thumbnails"][-1]["url"]
+                )
 
             return {
                 "title": info.get("title"),
                 "creator": info.get("uploader"),
                 "views": info.get("view_count"),
-                "likes": info.get("like_count"),
+                "likes": max(
+    info.get("like_count", 0),
+    0
+),
                 "comments": info.get("comment_count"),
                 "duration": info.get("duration"),
                 "upload_date": info.get("upload_date"),
-                "thumbnail": info.get("thumbnail"),
+                "thumbnail": thumbnail_url,
                 "hashtags": hashtags,
                 "followers": None
             }
@@ -54,7 +66,6 @@ def get_instagram_metadata(url):
         return {
             "error": str(e)
         }
-
 
 def get_instagram_transcript(url):
 
@@ -98,6 +109,10 @@ def get_instagram_transcript(url):
         result = model.transcribe(
             audio_file
         )
+        try:
+            os.remove(audio_file)
+        except:
+            pass
 
         return result["text"]
 

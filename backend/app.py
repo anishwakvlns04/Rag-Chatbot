@@ -18,7 +18,8 @@ from services.chunking_service import (
 from services.vector_store_service import (
     store_chunks,
     retrieve_chunks,
-    get_hook_chunks
+    get_hook_chunks,
+    clear_vector_store
 )
 from fastapi.responses import StreamingResponse
 
@@ -52,6 +53,9 @@ def analyze(request: AnalyzeRequest):
     chat_history = []
     video_metadata = {}
 
+    clear_vector_store()
+
+
     # Video A
     metadata_a = get_metadata(
     request.video_a_url
@@ -76,14 +80,23 @@ def analyze(request: AnalyzeRequest):
     else:
         metadata_a["engagement_rate"] = 0
 
-    chunks_a = chunk_transcript(
-        transcript_a
-    )
+    chunks_a = []
 
-    store_chunks(
-        chunks_a,
-        "A"
-    )
+    if transcript_a.startswith(
+        "Transcript Error"
+    ):
+        print("Video A transcript failed")
+
+    else:
+        chunks_a = chunk_transcript(
+            transcript_a
+        )
+
+        store_chunks(
+            chunks_a,
+            "A"
+        )
+
 
     response = {
         "videoA": {
@@ -291,7 +304,6 @@ def chat_sources(request: ChatRequest):
     return {
         "sources": chunks
     }
-
 
 @app.post("/clear-chat")
 def clear_chat():

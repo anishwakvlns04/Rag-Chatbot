@@ -15,6 +15,20 @@ collection = client.get_or_create_collection(
     name="video_chunks"
 )
 
+def clear_vector_store():
+
+    global collection
+
+    client.delete_collection(
+        "video_chunks"
+    )
+
+    collection = (
+        client.get_or_create_collection(
+            name="video_chunks"
+        )
+    )
+
 
 def store_chunks(chunks, video_id):
 
