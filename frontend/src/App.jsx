@@ -3,7 +3,7 @@ import axios from "axios";
 
 import VideoCard from "./components/VideoCard";
 import ChatPanel from "./components/ChatPanel";
-
+import logo from "./assets/logo.png";
 function App() {
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
@@ -84,10 +84,21 @@ if (response.data.videoB) {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-8">
-          AI Video Analyzer
-        </h1>
+        <div className="flex flex-col items-center mb-8">
+  <img
+    src={logo}
+    alt="VidLens Logo"
+    className="w-72 h-auto mb-4"
+  />
 
+  <h1 className="text-5xl font-bold">
+    AI Video Analyzer
+  </h1>
+
+  <p className="text-lg text-gray-600 mt-2">
+    Compare • Analyze • Improve
+  </p>
+</div>
         <div className="bg-white rounded-xl shadow-md p-6 mb-6">
           <div className="space-y-4">
             <input
