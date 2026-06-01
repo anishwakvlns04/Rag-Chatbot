@@ -1,8 +1,8 @@
-# AI Video Analyzer
+# VidLens - AI Video Analyzer
 
 ## Overview
 
-AI Video Analyzer is a Retrieval-Augmented Generation (RAG) application designed to help content creators understand, compare, and analyze the performance of short-form video content.
+VidLens (AI Video Analyzer) is a Retrieval-Augmented Generation (RAG) application designed to help content creators understand, compare, and analyze the performance of short-form video content.
 
 The system accepts two video URLs (YouTube Shorts and/or Instagram Reels), extracts available metadata and transcripts, stores transcript embeddings in a vector database, and provides a conversational AI interface that allows creators to ask questions about engagement, content strategy, hooks, audience targeting, and performance differences.
 
