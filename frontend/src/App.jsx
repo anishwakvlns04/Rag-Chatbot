@@ -17,8 +17,11 @@ function App() {
     try {
       setLoading(true);
 
-      const response = await axios.post(
-        "http://localhost:8000/analyze",
+      const API_URL =
+  import.meta.env.VITE_API_URL;
+
+const response = await axios.post(
+  `${API_URL}/analyze`,
         {
           video_a_url: youtubeUrl,
           video_b_url: instagramUrl,
