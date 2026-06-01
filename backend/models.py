@@ -2,8 +2,8 @@ from pydantic import BaseModel
 
 
 class AnalyzeRequest(BaseModel):
-    youtube_url: str
-    instagram_url: str = ""
+    video_a_url: str
+    video_b_url: str
 
 
 class ChatRequest(BaseModel):

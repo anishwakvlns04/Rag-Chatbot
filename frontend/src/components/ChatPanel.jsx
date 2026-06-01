@@ -104,6 +104,38 @@ function ChatPanel() {
           return updated;
         });
       }
+
+      const sourcesResponse =
+  await fetch(
+    "http://localhost:8000/chat/sources",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type":
+          "application/json",
+      },
+      body: JSON.stringify({
+        question: userQuestion,
+      }),
+    }
+  );
+
+const sourcesData =
+  await sourcesResponse.json();
+
+setMessages((prev) => {
+  const updated = [...prev];
+
+  updated[
+    updated.length - 1
+  ] = {
+    role: "assistant",
+    text: streamedText,
+    sources: sourcesData.sources,
+  };
+
+  return updated;
+});
     } catch (error) {
       console.error(error);
 

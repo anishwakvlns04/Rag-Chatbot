@@ -110,7 +110,7 @@ def generate_answer(
             + "\n\nTranscript Chunks:\n\n"
             + transcript_context
         )
-
+        
         chain = prompt_template | llm
 
         response = chain.invoke(
@@ -172,7 +172,7 @@ def stream_answer(
         + "\n\nTranscript Chunks:\n\n"
         + transcript_context
     )
-
+    
     chain = prompt_template | llm
 
     full_answer = ""

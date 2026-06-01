@@ -6,11 +6,11 @@ from services.rag_service import (
     stream_answer
 )
 
-from services.youtube_service import (
-    get_youtube_metadata,
-    get_youtube_transcript
-)
 
+from services.video_service import (
+    get_metadata,
+    get_transcript
+)
 from services.chunking_service import (
     chunk_transcript
 )
@@ -53,13 +53,14 @@ def analyze(request: AnalyzeRequest):
     video_metadata = {}
 
     # Video A
-    metadata_a = get_youtube_metadata(
-        request.youtube_url
+    metadata_a = get_metadata(
+    request.video_a_url
     )
+
     video_metadata["A"] = metadata_a
 
-    transcript_a = get_youtube_transcript(
-        request.youtube_url
+    transcript_a = get_transcript(
+    request.video_a_url
     )
 
     if metadata_a.get("views") and metadata_a["views"] > 0:
@@ -92,16 +93,17 @@ def analyze(request: AnalyzeRequest):
         }
     }
 
-    # Video B (temporarily treat as second YouTube URL)
-    if request.instagram_url.strip():
+    # Video B - optional
+    if request.video_b_url.strip():
 
-        metadata_b = get_youtube_metadata(
-            request.instagram_url
+        metadata_b = get_metadata(
+        request.video_b_url
         )
+
         video_metadata["B"] = metadata_b
 
-        transcript_b = get_youtube_transcript(
-            request.instagram_url
+        transcript_b = get_transcript(
+        request.video_b_url
         )
 
         if metadata_b.get("views") and metadata_b["views"] > 0:
@@ -250,6 +252,47 @@ def chat_stream(request: ChatRequest):
         media_type="text/plain"
     )
 
+@app.post("/chat/sources")
+def chat_sources(request: ChatRequest):
+
+    question_lower = request.question.lower()
+
+    if (
+        "hook" in question_lower
+        or "first 5 seconds" in question_lower
+    ):
+        hook_chunks = get_hook_chunks()
+
+        if "A" in hook_chunks and "B" in hook_chunks:
+
+            chunks = [
+                {
+                    "text": hook_chunks["A"]["text"],
+                    "video_id": "A",
+                    "chunk_index": 0
+                },
+                {
+                    "text": hook_chunks["B"]["text"],
+                    "video_id": "B",
+                    "chunk_index": 0
+                }
+            ]
+
+        else:
+            chunks = retrieve_chunks(
+                request.question
+            )
+
+    else:
+        chunks = retrieve_chunks(
+            request.question
+        )
+
+    return {
+        "sources": chunks
+    }
+
+
 @app.post("/clear-chat")
 def clear_chat():
 
@@ -260,3 +303,4 @@ def clear_chat():
     return {
         "message": "Chat history cleared"
     }
+

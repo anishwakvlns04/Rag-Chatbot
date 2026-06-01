@@ -3,13 +3,8 @@ function Message({
   text,
   sources
 }) {
-  const uniqueVideos = sources
-    ? [...new Set(
-        sources.map(
-          (source) => source.video_id
-        )
-      )]
-    : [];
+ const displaySources =
+  sources || [];
 
   return (
     <div
@@ -28,7 +23,7 @@ function Message({
       </p>
 
       {role === "assistant" &&
-        uniqueVideos.length > 0 && (
+        displaySources.length > 0&& (
           <div className="mt-3 border-t pt-2">
 
             <p className="text-xs font-semibold text-gray-500">
@@ -37,17 +32,17 @@ function Message({
 
             <div className="flex gap-2 flex-wrap mt-2">
 
-              {uniqueVideos.map(
-                (videoId, index) => (
+              {displaySources.map(
+                (source, index) => (
                   <span
                     key={index}
                     className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      videoId === "A"
+                      source.video_id === "A"
                         ? "bg-blue-100 text-blue-700"
                         : "bg-green-100 text-green-700"
                     }`}
                   >
-                    Video {videoId}
+                    Video {source.video_id} - Chunk {source.chunk_index}
                   </span>
                 )
               )}

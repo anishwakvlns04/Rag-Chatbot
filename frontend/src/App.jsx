@@ -20,8 +20,8 @@ function App() {
       const response = await axios.post(
         "http://localhost:8000/analyze",
         {
-          youtube_url: youtubeUrl,
-          instagram_url: instagramUrl,
+          video_a_url: youtubeUrl,
+          video_b_url: instagramUrl,
         }
       );
 
